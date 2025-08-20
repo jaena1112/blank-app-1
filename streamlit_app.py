@@ -1,6 +1,125 @@
+# --------------------------------------------------------------------------
+# [App: 성격별 꽃 진단 - 최종 완성 버전]
+# - 8가지 꽃 종류와 상세 설명
+# - 결과 화면에 이미지 표시 기능 포함
+# --------------------------------------------------------------------------
+
 import streamlit as st
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
+# --- 페이지 설정 ---
+# set_page_config는 스크립트에서 가장 먼저 실행되어야 하는 함수입니다.
+st.set_page_config(
+    page_title="성격별 꽃 진단 테스트",
+    page_icon="🌸",
+    layout="centered",
 )
+
+# --- 세션 상태(Session State) 초기화 ---
+# 사용자의 답변이나 앱의 상태를 저장하기 위해 session_state를 사용합니다.
+if 'submitted' not in st.session_state:
+    st.session_state.submitted = False
+
+def handle_submit():
+    """제출 버튼을 눌렀을 때 호출될 함수"""
+    st.session_state.submitted = True
+
+# --- 질문 데이터 ---
+questions = [
+    {"question": "1. 나는 새로운 사람들을 만나는 것을 즐긴다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 1, "아니다": 0}},
+    {"question": "2. 혼자 조용히 책을 읽는 시간이 더 좋다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 0, "아니다": 1}},
+    {"question": "3. 계획을 세우기보다 즉흥적으로 행동하는 편이다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 1, "아니다": 0}},
+    {"question": "4. 주변을 깔끔하게 정돈하는 것을 중요하게 생각한다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 0, "아니다": 1}},
+    {"question": "5. 다른 사람의 감정에 깊이 공감하는 편이다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 1, "아니다": 0}},
+    {"question": "6. 논리적이고 사실에 기반하여 결정하는 것을 선호한다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 0, "아니다": 1}},
+    {"question": "7. 주말에는 주로 집에서 시간을 보내는 것을 좋아한다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 0, "아니다": 1}},
+    {"question": "8. 나는 대화할 때 주로 이야기를 주도하는 편이다.", "options": ["그렇다", "아니다"], "points": {"그렇다": 1, "아니다": 0}}
+]
+
+# --- 결과 데이터 (상세 설명 및 이미지 경로 포함) ---
+# 이미지 파일 확장자를 선생님의 파일에 맞춰 '.jpg'로 수정했습니다.
+results = {
+    "해바라기": {
+        "range": (8, 8),
+        "description": """**밝고 긍정적인 에너지의 소유자, 당신은 활짝 핀 해바라기입니다.**\n\n언제나 태양을 향해 고개를 드는 해바라기처럼, 당신은 긍정적이고 낙천적인 태도로 주변을 환하게 밝힙니다. 당신의 활기찬 에너지는 자연스럽게 사람들을 끌어당기며, 어떤 모임에서든 중심적인 역할을 합니다. 새로운 만남을 두려워하지 않고, 먼저 다가가는 사교적인 성격 덕분에 주변에는 항상 좋은 친구들이 함께합니다. 당신의 존재만으로도 주변 사람들은 큰 힘과 위로를 얻습니다.""",
+        "image_path": "images/sunflower.jpg"
+    },
+    "장미": {
+        "range": (7, 7),
+        "description": """**열정과 자신감의 상징, 당신은 매혹적인 장미입니다.**\n\n아름다운 꽃잎과 당당한 줄기를 가진 장미처럼, 당신은 열정적이고 자신감 넘치는 매력의 소유자입니다. 자신의 목표와 신념을 향해 뚜렷한 주관을 가지고 나아가며, 그 과정에서 자연스럽게 리더십을 발휘합니다. 때로는 섬세한 감성으로 주변을 살피는 반전 매력도 가지고 있어, 많은 사람들이 당신을 신뢰하고 따릅니다. 당신의 열정은 주변 사람들에게 강한 동기부여가 됩니다.""",
+        "image_path": "images/rose.jpg"
+    },
+    "튤립": {
+        "range": (6, 6),
+        "description": """**솔직하고 따뜻한 마음의 소유자, 당신은 사랑스러운 튤립입니다.**\n\n다양한 색으로 사랑을 표현하는 튤립처럼, 당신은 자신의 감정을 솔직하게 표현할 줄 아는 따뜻한 마음을 가졌습니다. 사람들과의 관계를 소중히 여기며, 특히 가족과 친구들에게 깊은 애정을 쏟습니다. 당신의 진심 어린 배려와 꾸밈없는 모습은 주변 사람들에게 큰 안정감과 편안함을 줍니다. 당신과 함께하는 시간은 언제나 즐겁고 따뜻합니다.""",
+        "image_path": "images/tulip.jpg"
+    },
+    "프리지아": {
+        "range": (5, 5),
+        "description": """**새로운 시작을 응원하는 모험가, 당신은 향기로운 프리지아입니다.**\n\n봄의 시작을 알리는 프리지어처럼, 당신은 새로운 도전과 시작을 즐기는 모험적인 성향을 가지고 있습니다. 왕성한 호기심으로 세상을 탐색하고, 긍정적인 태도로 어떤 어려움이든 헤쳐나갑니다. 당신의 천진난만함과 밝은 에너지는 주변 사람들에게 신선한 영감과 즐거움을 선사하며, 함께하는 이들의 도전을 응원하는 훌륭한 파트너가 되어줍니다.""",
+        "image_path": "images/freesia.jpg"
+    },
+    "코스모스": {
+        "range": (4, 4),
+        "description": """**조화와 균형을 사랑하는 평화주의자, 당신은 아름다운 코스모스입니다.**\n\n가을 하늘 아래 조화롭게 피어나는 코스모스처럼, 당신은 평화롭고 균형 잡힌 삶을 중요하게 생각합니다. 섬세한 감성을 지녀 일상 속 작은 아름다움을 잘 발견하며, 다른 사람의 감정을 예민하게 파악하고 공감합니다. 갈등보다는 화합을 추구하며, 당신이 있는 곳에는 언제나 안정적이고 부드러운 분위기가 만들어집니다.""",
+        "image_path": "images/cosmos.jpg"
+    },
+    "라일락": {
+        "range": (3, 3),
+        "description": """**깊이 있는 내면을 가진 사색가, 당신은 은은한 향기의 라일락입니다.**\n\n은은하고 기분 좋은 향기를 품은 라일락처럼, 당신은 화려하게 드러내기보다 차분하게 자신의 내면을 가꾸는 것을 좋아합니다. 혼자만의 시간을 통해 에너지를 충전하며, 깊이 있는 생각과 통찰력으로 현상을 꿰뚫어 봅니다. 신중하고 지혜로운 당신의 조언은 주변 사람들에게 큰 도움이 되며, 훌륭한 상담가이자 현명한 친구로 여겨집니다.""",
+        "image_path": "images/lilac.jpg"
+    },
+    "민들레": {
+        "range": (2, 2),
+        "description": """**부드러움 속에 강인함을 감춘 개척자, 당신은 희망의 상징 민들레입니다.**\n\n어디서든 꿋꿋하게 피어나는 민들레처럼, 당신은 겉보기엔 부드럽고 유연해 보이지만 내면에는 강인한 생명력과 의지를 품고 있습니다. 어떤 어려운 환경에 처하더라도 쉽게 좌절하지 않고, 묵묵히 자신의 길을 개척해 나갑니다. 당신의 끈기와 긍정적인 마음은 주변 사람들에게 조용한 희망과 용기를 줍니다.""",
+        "image_path": "images/dandelion.jpg"
+    },
+    "안개꽃": {
+        "range": (0, 1),
+        "description": """**주인공을 빛나게 하는 겸손한 조력자, 당신은 배려심 깊은 안개꽃입니다.**\n\n화려한 꽃다발 속에서 다른 꽃들을 더 돋보이게 해주는 안개꽃처럼, 당신은 자신을 내세우기보다 주변 사람들을 빛나게 해주는 데서 기쁨을 느낍니다. 뛰어난 공감 능력으로 다른 사람의 마음을 헤아리고, 훌륭한 경청자가 되어줍니다. 당신의 겸손함과 깊은 배려심은 주변 관계를 더욱 단단하고 풍성하게 만들어주는 소중한 밑거름이 됩니다.""",
+        "image_path": "images/gypsophila.jpg"
+    }
+}
+
+# --- 앱 UI 구성 ---
+st.title("🌸 성격으로 알아보는 나의 꽃은?")
+st.write("간단한 질문에 답하고 당신의 성격과 꼭 닮은 꽃을 찾아보세요!")
+st.write("---")
+
+# st.form을 사용하여 모든 질문에 답한 후 한 번에 제출하도록 합니다.
+with st.form(key="personality_form"):
+    user_answers = {}
+    # 질문 데이터를 기반으로 라디오 버튼을 동적으로 생성합니다.
+    for i, q in enumerate(questions):
+        user_answers[f"q{i}"] = st.radio(q["question"], q["options"], key=f"q{i}", horizontal=True)
+
+    # 폼 제출 버튼
+    submitted = st.form_submit_button("결과 보기", on_click=handle_submit)
+
+# --- 결과 처리 및 표시 ---
+# 사용자가 '결과 보기' 버튼을 눌렀을 경우에만 아래 로직이 실행됩니다.
+if st.session_state.submitted:
+    # 점수 계산
+    total_score = sum(q["points"][user_answers[f"q{i}"]] for i, q in enumerate(questions))
+
+    # 점수에 맞는 결과 찾기
+    final_result_data = None
+    for flower, data in results.items():
+        if data["range"][0] <= total_score <= data["range"][1]:
+            final_result_data = data
+            final_result_data["name"] = flower
+            break
+
+    # 결과 화면 출력
+    if final_result_data:
+        st.header(f"당신의 성격 꽃은 '{final_result_data['name']}'입니다!", divider="rainbow")
+        
+        # st.image()를 사용하여 이미지를 표시합니다.
+        st.image(final_result_data["image_path"], caption=f"당신을 닮은 {final_result_data['name']}")
+        
+        # st.info()를 사용하여 결과 설명을 눈에 띄게 표시합니다.
+        st.info(final_result_data["description"])
+
+    # 다시 시작 버튼
+    if st.button("다시 테스트하기"):
+        st.session_state.submitted = False
+        st.rerun() # rerun 명령어로 페이지를 새로고침하여 처음 상태로 돌아갑니다.
